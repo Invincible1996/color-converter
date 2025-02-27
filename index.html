@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>色彩模式转换工具</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body style="background-color: #f0f0f0;">
+  <div class="container">
+    <h1>色彩模式转换工具</h1>
+    
+    <div class="color-picker">
+      <div class="color-picker-left">
+        <div class="color-square" id="colorSquare">
+          <div class="color-square-pointer" id="squarePointer"></div>
+        </div>
+        
+        <div class="hue-slider" id="hueSlider">
+          <div class="hue-slider-pointer" id="huePointer"></div>
+        </div>
+        
+        <div class="color-slider" id="colorSlider">
+          <div class="color-slider-pointer" id="sliderPointer"></div>
+        </div>
+        
+        <div class="edit-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+          </svg>
+        </div>
+      </div>
+      
+      <div class="color-picker-right">
+        <div class="control-row">
+          <div class="color-format">HEX</div>
+          <input type="text" class="color-input" id="hexInput" value="#0066FF">
+          <button class="convert-btn" data-type="hex">应用</button>
+        </div>
+        
+        <div class="control-row">
+          <div class="color-format">RGBA</div>
+          <input type="text" class="color-input" id="rgbaInput" value="0, 102, 255, 1.0">
+          <button class="convert-btn" data-type="rgba">应用</button>
+        </div>
+        
+        <div class="control-row">
+          <div class="color-format">HSL</div>
+          <input type="text" class="color-input" id="hslInput" value="216, 100%, 50%, 1.0">
+          <button class="convert-btn" data-type="hsl">应用</button>
+        </div>
+        
+        <div class="control-row">
+          <div class="color-format">HSV</div>
+          <input type="text" class="color-input" id="hsvInput" value="216, 100%, 100%, 1.0">
+          <button class="convert-btn" data-type="hsv">应用</button>
+        </div>
+        
+        <div class="control-row">
+          <div class="color-format">CMYK</div>
+          <input type="text" class="color-input" id="cmykInput" value="100%, 60%, 0%, 0%">
+          <button class="convert-btn" data-type="cmyk">应用</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="opacity-slider">
+      <span>0%</span>
+      <input type="range" min="0" max="100" value="100" id="opacitySlider">
+      <span>100%</span>
+    </div>
+    
+    <div class="color-preview" id="colorPreview"></div>
+    
+    <div class="version">ImJJ v0.1 Alpha 20241209</div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

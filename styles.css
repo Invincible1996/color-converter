@@ -1,0 +1,348 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+body {
+  background: linear-gradient(to right, red, blue); /* 更改为红蓝渐变背景 */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.container {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+  padding: 30px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+h1 {
+  text-align: center;
+  margin-bottom: 30px;
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 2rem;
+}
+
+.color-picker {
+  display: flex;
+  margin-bottom: 20px;
+  gap: 30px; /* 增加左右两栏的间距 */
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.color-picker-left {
+  flex: 0.8; /* 减少左侧栏的比例 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  width: 200px;
+  margin-right: 2rem;
+}
+
+.color-picker-right {
+  flex: 1.2; /* 增加右侧栏的比例 */
+  margin-left: 0; /* 移除原有的margin，使用gap代替 */
+  flex-grow: 1;
+}
+
+.color-wheel {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin-bottom: 20px;
+  background: conic-gradient(
+    red, yellow, lime, cyan, blue, magenta, red
+  );
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.color-wheel-pointer {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-color: transparent;
+  border: 2px solid white;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  /* 移除默认位置，position将由JavaScript动态计算 */
+}
+
+.color-slider {
+  position: relative;
+  width: 200px;
+  height: 20px;
+  background: linear-gradient(to right, #000000, #0066ff);
+  border-radius: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  display: none; /* Hide the original slider */
+}
+
+.color-slider-pointer {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-color: transparent;
+  border: 2px solid white;
+  border-radius: 50%;
+  top: 50%;
+  /* 移除right: 0，位置将由JavaScript动态计算 */
+  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  width: 28px;
+  height: 12px;
+  left: 50%;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px; /* 增加行间距 */
+  flex-wrap: wrap; /* 允许在需要时换行 */
+  margin-bottom: 1rem;
+}
+
+.color-format {
+  width: 50px; /* 稍微减小标签宽度 */
+  font-size: 15px;
+  text-align: right;
+  color: #555;
+  margin-right: 10px; /* 增加与输入框的间距 */
+  flex-shrink: 0; /* 防止标签被压缩 */
+  font-weight: bold;
+  margin-right: 1rem;
+}
+
+.color-input {
+  flex: 1;
+  min-width: 150px; /* 增加最小宽度 */
+  padding: 8px 12px; /* 增加水平内边距 */
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 15px; /* 稍微减小字体大小 */
+  margin-right: 10px; /* 增加与按钮的间距 */
+  transition: border-color 0.2s;
+  flex-grow: 1;
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: monospace;
+  margin-right: 0.5rem;
+}
+
+.color-input:focus {
+  outline: none;
+  border-color: #4a86e8; /* 聚焦时改变边框颜色 */
+}
+
+.convert-btn {
+  width: 60px; /* 固定按钮宽度 */
+  padding: 8px 0; /* 使用0水平内边距和固定宽度 */
+  background-color: #4a86e8;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap; /* 防止文本换行 */
+  opacity: 0.8; /* 稍微降低不透明度，显得不那么突出 */
+  padding: 0.5rem 1rem;
+  background-color: #0066ff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.convert-btn:hover {
+  background-color: #3a76d8;
+  opacity: 1;
+  background-color: #0055dd;
+}
+
+.opacity-slider {
+  width: 100%;
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.opacity-slider input {
+  flex-grow: 1;
+  margin: 0 10px;
+  flex-grow: 1;
+  margin: 0 1rem;
+}
+
+.color-preview {
+  width: 100%;
+  height: 100px;
+  border-radius: 8px;
+  background-color: #4a86e8;
+  margin-top: 10px;
+  height: 60px;
+  background-color: #0066FF;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.edit-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 24px;
+  height: 24px;
+  color: #666;
+  cursor: pointer;
+  display: none; /* Hide until needed */
+}
+
+.edit-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.version {
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+  margin-top: 20px;
+  text-align: right;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+/* 添加响应式设计 */
+@media (max-width: 640px) {
+  .color-picker {
+    flex-direction: column;
+    gap: 15px; /* 减小垂直间距 */
+  }
+  
+  .color-picker-right {
+    margin-top: 0; /* 移除原有的上边距，使用gap代替 */
+  }
+  
+  .color-format {
+    width: 50px;
+    font-size: 14px;
+  }
+  
+  .convert-btn {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  
+  .container {
+    padding: 20px 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .control-row {
+    flex-wrap: wrap;
+  }
+  
+  .color-format {
+    width: 100%;
+    text-align: left;
+    margin-bottom: 5px;
+  }
+  
+  .color-input {
+    width: calc(100% - 70px); /* 稍微调整计算公式 */
+    margin-right: 8px;
+  }
+  
+  .convert-btn {
+    width: 60px; /* 保持按钮宽度一致 */
+    padding: 6px 0;
+    text-align: center;
+  }
+}
+
+/* Color square for saturation/value picking */
+.color-square {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  cursor: crosshair;
+  background: linear-gradient(to right, #fff, #f00),
+              linear-gradient(to top, #000, transparent);
+  background-blend-mode: multiply;
+}
+
+.color-square-pointer {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+/* Horizontal hue slider */
+.hue-slider {
+  position: relative;
+  width: 200px;
+  height: 20px;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  background: linear-gradient(to right, 
+    #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000);
+}
+
+.hue-slider-pointer {
+  position: absolute;
+  width: 12px;
+  height: 24px;
+  top: 50%;
+  border-radius: 3px;
+  background-color: white;
+  border: 1px solid #ccc;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
