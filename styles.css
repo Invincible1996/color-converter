@@ -125,6 +125,9 @@ h1 {
   margin-bottom: 15px; /* 增加行间距 */
   flex-wrap: wrap; /* 允许在需要时换行 */
   margin-bottom: 1rem;
+  position: relative;
+  min-height: 40px;
+  margin-bottom: 20px; /* 增加行距，为可能出现的错误消息留出空间 */
 }
 
 .color-format {
@@ -345,4 +348,27 @@ h1 {
   transform: translate(-50%, -50%);
   box-shadow: 0 0 3px rgba(0, 0, 0, 0.3);
   pointer-events: none;
+}
+
+/* 添加错误样式 */
+.input-error {
+  border-color: #ff3b30 !important;
+  background-color: rgba(255, 59, 48, 0.05);
+}
+
+.error-message {
+  color: #ff3b30;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
+  width: 100%; /* 使用全宽 */
+  padding-left: 60px; /* 与输入框对齐 */
+  box-sizing: border-box;
+}
+
+/* 确保控制行有足够的空间显示错误消息 */
+.control-row {
+  position: relative;
+  min-height: 40px;
+  margin-bottom: 20px; /* 为可能的错误消息留出空间 */
 }

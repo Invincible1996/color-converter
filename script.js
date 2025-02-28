@@ -16,6 +16,34 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Convert buttons
   const convertButtons = document.querySelectorAll('.convert-btn');
+  
+  // Color history elements
+  const colorHistoryContainer = document.createElement('div');
+  colorHistoryContainer.id = 'colorHistory';
+  colorHistoryContainer.className = 'color-history-container';
+  
+  // 修复：检查是否存在.color-converter元素，如果不存在则附加到body
+  const colorConverter = document.querySelector('.color-converter');
+  if (colorConverter) {
+    colorConverter.appendChild(colorHistoryContainer);
+  } else {
+    // 查找更可能存在的父容器，或者创建一个
+    const container = document.querySelector('.container') || document.querySelector('main') || document.body;
+    container.appendChild(colorHistoryContainer);
+  }
+  
+  const historyTitle = document.createElement('h3');
+  historyTitle.textContent = '颜色历史记录';
+  colorHistoryContainer.appendChild(historyTitle);
+  
+  const historySwatches = document.createElement('div');
+  historySwatches.id = 'historySwatches';
+  historySwatches.className = 'color-history-swatches';
+  colorHistoryContainer.appendChild(historySwatches);
+
+  // Color history tracking
+  let colorHistory = [];
+  const maxHistoryItems = 16; // Maximum number of history items
 
   // Current color state
   let currentColor = {
@@ -24,6 +52,10 @@ document.addEventListener('DOMContentLoaded', function() {
     v: 100,   // Value: 0-100
     a: 1.0    // Alpha: 0-1
   };
+
+  // 添加变量来跟踪HEX格式和输入错误状态
+  let hexFormat = 'long'; // 'short' 表示3位格式，'long' 表示6位格式
+  let hexInputError = false;
 
   // Initialize color picker
   initColorPicker();
@@ -53,16 +85,39 @@ document.addEventListener('DOMContentLoaded', function() {
     // Opacity slider event
     opacitySlider.addEventListener('input', handleOpacityChange);
     
-    // Convert button events
+    // 修改按钮事件 - 改为复制功能
     convertButtons.forEach(btn => {
+      // 更新按钮文本为"复制"
+      if (btn.textContent.includes('应用') || btn.textContent.includes('Apply')) {
+        btn.textContent = btn.textContent.replace('应用', '复制').replace('Apply', 'Copy');
+      }
+      
+      // 更改点击事件为复制功能
       btn.addEventListener('click', () => {
         const type = btn.dataset.type;
-        applyColorFromInput(type);
+        copyColorValue(type, btn);
       });
     });
 
-    // 添加输入框的实时更新事件
-    hexInput.addEventListener('input', debounce(() => applyColorFromInput('hex'), 300));
+    // 修改hex输入框的事件监听
+    hexInput.addEventListener('input', debounce(() => {
+      // 检测输入的HEX格式
+      const hex = hexInput.value.trim();
+      const hexValue = hex.replace(/^#/, '');
+
+      // 验证HEX格式
+      if (isValidHexFormat(hexValue)) {
+        removeHexInputError();
+        if (hexValue.length === 3 || hexValue.length === 4) {
+          hexFormat = 'short';
+        } else {
+          hexFormat = 'long';
+        }
+        applyColorFromInput('hex');
+      } else {
+        showHexInputError();
+      }
+    }, 300));
     rgbaInput.addEventListener('input', debounce(() => applyColorFromInput('rgba'), 300));
     hslInput.addEventListener('input', debounce(() => applyColorFromInput('hsl'), 300));
     hsvInput.addEventListener('input', debounce(() => applyColorFromInput('hsv'), 300));
@@ -80,6 +135,50 @@ document.addEventListener('DOMContentLoaded', function() {
         func.apply(context, args);
       }, wait);
     };
+  }
+
+  // 验证HEX格式是否正确
+  function isValidHexFormat(hex) {
+    // 验证长度是否为3、4、6或8位
+    if (![3, 4, 6, 8].includes(hex.length)) {
+      return false;
+    }
+    
+    // 验证是否只包含有效的十六进制字符
+    return /^[0-9A-Fa-f]+$/.test(hex);
+  }
+
+  // 显示HEX输入错误
+  function showHexInputError() {
+    hexInput.classList.add('input-error');
+    hexInputError = true;
+    
+    // 如果页面中没有错误提示元素，则创建一个
+    let errorMsgEl = document.getElementById('hexInputError');
+    if (!errorMsgEl) {
+      errorMsgEl = document.createElement('div');
+      errorMsgEl.id = 'hexInputError';
+      errorMsgEl.className = 'error-message';
+      errorMsgEl.textContent = '无效的十六进制颜色格式！请使用 3位(#RGB)、4位(#RGBA)、6位(#RRGGBB) 或 8位(#RRGGBBAA) 格式。';
+      
+      // 将错误提示插入到控制行的最后，使其出现在输入框下方
+      const controlRow = hexInput.closest('.control-row');
+      controlRow.appendChild(errorMsgEl);
+    }
+  }
+
+  // 移除HEX输入错误
+  function removeHexInputError() {
+    if (hexInputError) {
+      hexInput.classList.remove('input-error');
+      hexInputError = false;
+      
+      // 移除错误提示
+      const errorMsgEl = document.getElementById('hexInputError');
+      if (errorMsgEl) {
+        errorMsgEl.remove();
+      }
+    }
   }
 
   // Hue slider interaction
@@ -172,9 +271,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // No need to update as the gradient is set in CSS
   }
 
-  // Opacity slider handler
+  // 修改handleOpacityChange，确保透明度为两位小数
   function handleOpacityChange() {
-    currentColor.a = opacitySlider.value / 100;
+    currentColor.a = parseFloat((opacitySlider.value / 100).toFixed(2));
     updateColorFromHsv();
     updateAllInputs();
   }
@@ -190,25 +289,29 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Update color preview
     colorPreview.style.backgroundColor = `rgba(${rgbaColor.join(',')})`;
+    
+    // Add current color to history
+    addToColorHistory();
   }
 
+  // 修改updateAllInputs函数，确保透明度信息显示为两位小数
   function updateAllInputs() {
-    // Update HEX input
-    hexInput.value = rgbaToHex(hsvToRgba(
-      currentColor.h,
-      currentColor.s,
-      currentColor.v,
-      currentColor.a
-    ));
-    
-    // Update RGBA input
+    // 计算rgba值
     const rgba = hsvToRgba(
       currentColor.h,
       currentColor.s,
       currentColor.v,
       currentColor.a
     );
-    rgbaInput.value = rgba.join(', ');
+    
+    // Update HEX input - 确保透明度信息正确传递
+    hexInput.value = rgbaToHex(rgba);
+    
+    // 格式化透明度为两位小数
+    const formattedAlpha = currentColor.a.toFixed(2);
+    
+    // Update RGBA input - 保持RGB为整数，透明度为两位小数
+    rgbaInput.value = `${rgba[0]}, ${rgba[1]}, ${rgba[2]}, ${formattedAlpha}`;
     
     // Update HSL input
     const hsl = hsvToHsl(
@@ -216,12 +319,12 @@ document.addEventListener('DOMContentLoaded', function() {
       currentColor.s,
       currentColor.v
     );
-    hslInput.value = `${Math.round(hsl[0])}, ${Math.round(hsl[1])}%, ${Math.round(hsl[2])}%, ${currentColor.a}`;
+    hslInput.value = `${Math.round(hsl[0])}, ${Math.round(hsl[1])}%, ${Math.round(hsl[2])}%, ${formattedAlpha}`;
     
     // Update HSV input
-    hsvInput.value = `${Math.round(currentColor.h)}, ${Math.round(currentColor.s)}%, ${Math.round(currentColor.v)}%, ${currentColor.a}`;
+    hsvInput.value = `${Math.round(currentColor.h)}, ${Math.round(currentColor.s)}%, ${Math.round(currentColor.v)}%, ${formattedAlpha}`;
     
-    // Update CMYK input
+    // Update CMYK input - CMYK不包含透明度信息
     const cmyk = rgbToCmyk(rgba[0], rgba[1], rgba[2]);
     cmykInput.value = `${Math.round(cmyk[0])}%, ${Math.round(cmyk[1])}%, ${Math.round(cmyk[2])}%, ${Math.round(cmyk[3])}%`;
   }
@@ -258,6 +361,24 @@ document.addEventListener('DOMContentLoaded', function() {
   function applyHexColor() {
     // Implementation of applying hex color
     const hex = hexInput.value.trim();
+    const hexValue = hex.replace(/^#/, '');
+    
+    // 验证HEX格式
+    if (!isValidHexFormat(hexValue)) {
+      showHexInputError();
+      return; // 如果格式不正确，不应用颜色更改
+    }
+    
+    // 移除错误状态
+    removeHexInputError();
+    
+    // 检测并更新HEX格式
+    if (hexValue.length === 3 || hexValue.length === 4) {
+      hexFormat = 'short';
+    } else {
+      hexFormat = 'long';
+    }
+    
     const rgba = hexToRgba(hex);
     const hsv = rgbaToHsv(rgba[0], rgba[1], rgba[2], rgba[3]);
     
@@ -269,6 +390,7 @@ document.addEventListener('DOMContentLoaded', function() {
     opacitySlider.value = currentColor.a * 100;
   }
 
+  // 修改applyColorFromInput中透明度解析，确保保存为数值
   function applyRgbaColor() {
     // Implementation of applying RGBA color
     const values = rgbaInput.value.trim().split(',').map(v => parseFloat(v.trim()));
@@ -278,7 +400,7 @@ document.addEventListener('DOMContentLoaded', function() {
       currentColor.h = hsv[0];
       currentColor.s = hsv[1];
       currentColor.v = hsv[2];
-      currentColor.a = hsv[3];
+      currentColor.a = parseFloat(hsv[3].toFixed(2)); // 保证透明度为两位小数
       
       opacitySlider.value = currentColor.a * 100;
     }
@@ -296,7 +418,7 @@ document.addEventListener('DOMContentLoaded', function() {
       currentColor.h = hsv[0];
       currentColor.s = hsv[1];
       currentColor.v = hsv[2];
-      currentColor.a = values[3] !== undefined ? values[3] : 1;
+      currentColor.a = values[3] !== undefined ? parseFloat(values[3].toFixed(2)) : 1;
       
       opacitySlider.value = currentColor.a * 100;
     }
@@ -312,7 +434,7 @@ document.addEventListener('DOMContentLoaded', function() {
       currentColor.h = values[0];
       currentColor.s = values[1];
       currentColor.v = values[2];
-      currentColor.a = values[3] !== undefined ? values[3] : 1;
+      currentColor.a = values[3] !== undefined ? parseFloat(values[3].toFixed(2)) : 1;
       
       opacitySlider.value = currentColor.a * 100;
     }
@@ -420,10 +542,40 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   function rgbaToHex(rgba) {
-    return `#${rgba.slice(0, 3).map(v => {
-      const hex = Math.round(v).toString(16);
-      return hex.length === 1 ? '0' + hex : hex;
-    }).join('')}`;
+    const r = Math.round(rgba[0]);
+    const g = Math.round(rgba[1]);
+    const b = Math.round(rgba[2]);
+    const a = rgba[3];
+
+    // 检查是否可以使用短格式 (如果R,G,B的十六进制值的两位数字相同)
+    const canBeShort = 
+      (r % 17 === 0 && g % 17 === 0 && b % 17 === 0) && // 确保可以用单个十六进制数字表示
+      (r < 256 && g < 256 && b < 256); // 确保在有效范围内
+    
+    // 检查是否有透明度信息
+    const hasAlpha = a < 1;
+    
+    // 如果用户之前使用的是短格式
+    if (hexFormat === 'short' && canBeShort) {
+      if (hasAlpha) {
+        // 如果有透明度，使用4位格式 (#RGBA)
+        const alphaHex = Math.round(a * 15).toString(16);
+        return `#${(r / 17).toString(16)}${(g / 17).toString(16)}${(b / 17).toString(16)}${alphaHex}`;
+      } else {
+        // 如果没有透明度，使用3位格式 (#RGB)
+        return `#${(r / 17).toString(16)}${(g / 17).toString(16)}${(b / 17).toString(16)}`;
+      }
+    }
+    
+    // 使用长格式
+    if (hasAlpha) {
+      // 如果有透明度，使用8位格式 (#RRGGBBAA)
+      const alphaHex = Math.round(a * 255).toString(16).padStart(2, '0');
+      return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}${alphaHex}`;
+    } else {
+      // 如果没有透明度，使用6位格式 (#RRGGBB)
+      return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+    }
   }
 
   function hexToRgba(hex) {
@@ -431,6 +583,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Remove # if present
     hex = hex.replace(/^#/, '');
+    
+    // 验证HEX格式
+    if (!isValidHexFormat(hex)) {
+      return [0, 0, 0, 1]; // 返回默认黑色
+    }
     
     // Handle shorthand hex
     if (hex.length === 3) {
@@ -489,5 +646,102 @@ document.addEventListener('DOMContentLoaded', function() {
     const b = 255 * (1 - y) * (1 - k);
     
     return [Math.round(r), Math.round(g), Math.round(b)];
+  }
+
+  // Color history functions
+  function addToColorHistory() {
+    const rgbaColor = hsvToRgba(currentColor.h, currentColor.s, currentColor.v, currentColor.a);
+    const hexColor = rgbaToHex(rgbaColor);
+    
+    // Don't add duplicates or if it's the same as the most recent color
+    if (colorHistory.length > 0 && colorHistory[0] === hexColor) {
+      return;
+    }
+    
+    // Remove this color if it exists anywhere in the history
+    colorHistory = colorHistory.filter(color => color !== hexColor);
+    
+    // Add to the beginning of the array
+    colorHistory.unshift(hexColor);
+    
+    // Limit the history size
+    if (colorHistory.length > maxHistoryItems) {
+      colorHistory.pop();
+    }
+    
+    // Update the display
+    updateColorHistoryDisplay();
+  }
+  
+  function updateColorHistoryDisplay() {
+    const historySwatches = document.getElementById('historySwatches');
+    historySwatches.innerHTML = '';
+    
+    colorHistory.forEach(hexColor => {
+      const swatch = document.createElement('div');
+      swatch.className = 'color-swatch';
+      swatch.style.backgroundColor = hexColor;
+      swatch.title = hexColor;
+      swatch.addEventListener('click', () => applyColorFromHistory(hexColor));
+      historySwatches.appendChild(swatch);
+    });
+  }
+  
+  function applyColorFromHistory(hexColor) {
+    hexInput.value = hexColor;
+    applyHexColor();
+    
+    // Make the clicked color the most recent in history
+    colorHistory = colorHistory.filter(color => color !== hexColor);
+    colorHistory.unshift(hexColor);
+    updateColorHistoryDisplay();
+  }
+
+  // 添加复制功能
+  function copyColorValue(type, buttonElement) {
+    let valueToCopy = '';
+    
+    switch(type) {
+      case 'hex':
+        valueToCopy = hexInput.value;
+        break;
+      case 'rgba':
+        valueToCopy = `rgba(${rgbaInput.value})`;
+        break;
+      case 'hsl':
+        valueToCopy = `hsl(${hslInput.value})`;
+        break;
+      case 'hsv':
+        valueToCopy = `hsv(${hsvInput.value})`;
+        break;
+      case 'cmyk':
+        valueToCopy = `cmyk(${cmykInput.value})`;
+        break;
+    }
+    
+    // 复制到剪贴板
+    navigator.clipboard.writeText(valueToCopy).then(() => {
+      // 显示复制成功反馈
+      const originalText = buttonElement.textContent;
+      buttonElement.textContent = '已复制!';
+      buttonElement.classList.add('copy-success');
+      
+      // 2秒后恢复原始文本
+      setTimeout(() => {
+        buttonElement.textContent = originalText;
+        buttonElement.classList.remove('copy-success');
+      }, 2000);
+    }).catch(err => {
+      console.error('复制失败: ', err);
+      // 显示复制失败反馈
+      buttonElement.textContent = '复制失败';
+      buttonElement.classList.add('copy-error');
+      
+      // 2秒后恢复原始文本
+      setTimeout(() => {
+        buttonElement.textContent = originalText;
+        buttonElement.classList.remove('copy-error');
+      }, 2000);
+    });
   }
 });
